@@ -1,7 +1,21 @@
+// ==========================================
+// 🔑 НАЛАШТУВАННЯ SUPABASE & TELEGRAM ID
+// ==========================================
+const SUPABASE_URL = "sb_publishable_E0vH6VXOaDuabzi6gROFqw_K__mVSKW"; // Заміни на свій Project URL
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRoeXp4dG5zZ3B0a2tmdHVwaWZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyMzQxNTYsImV4cCI6MjEwNDgxMDE1Nn0.Xm9ewxhj46pHPPDstgqx4VO6ue3ODCsaoDa9T0aqUm0";                  // Заміни на свій anon/public key
+
+const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+// Отримання ID гравця з Telegram
 const tg = window.Telegram?.WebApp;
 if (tg) tg.expand();
 
-// Аудіо-система
+const tgUser = tg?.initDataUnsafe?.user;
+const userId = tgUser?.id ? String(tgUser.id) : "test_dev_user";
+
+// ==========================================
+// АУДІО СИСТЕМА
+// ==========================================
 const bgMusic = document.getElementById('bg-music');
 let isAudioUnlocked = false;
 let audioCtx = null;
@@ -45,7 +59,9 @@ function playSFX(freq, type = 'sine', duration = 0.1) {
     } catch (e) {}
 }
 
-// Стан гри закарпатською говіркою
+// ==========================================
+// СТАН ГРИ ТА ДАНІ
+// ==========================================
 const defaultState = {
     balance: 0,
     totalEarned: 0,
@@ -79,10 +95,52 @@ const defaultState = {
 
 let gameState = JSON.parse(localStorage.getItem('zakarpattia_farm_v13')) || defaultState;
 
-function saveGame() {
-    localStorage.setItem('zakarpattia_farm_v13', JSON.stringify(gameState));
+// ==========================================
+// СИНХРОНІЗАЦІЯ З БАЗОЮ DANIH (SUPABASE)
+// ==========================================
+async function loadGameFromServer() {
+    if (!supabase) return;
+    try {
+        const { data, error } = await supabase
+            .from('players')
+            .select('save_data')
+            .eq('telegram_id', userId)
+            .single();
+
+        if (data && data.save_data) {
+            gameState = { ...defaultState, ...data.save_data };
+            console.log("✅ Прогрес ґазди завантажено з хмари!");
+        } else {
+            console.log("🆕 Новий ґазда! Створюємо запис у базі...");
+        }
+    } catch (e) {
+        console.warn("Помилка зв'язку з базою, використовуємо локальну пам'ять", e);
+    }
+    updateUI();
 }
 
+async function saveGame() {
+    // 1. Локальний бэкап
+    localStorage.setItem('zakarpattia_farm_v13', JSON.stringify(gameState));
+
+    // 2. Хмарне збереження у Supabase
+    if (!supabase) return;
+    try {
+        await supabase
+            .from('players')
+            .upsert({ 
+                telegram_id: userId, 
+                save_data: gameState,
+                updated_at: new Date()
+            });
+    } catch (e) {
+        console.error("Помилка збереження у хмару:", e);
+    }
+}
+
+// ==========================================
+// ЛОГІКА ГРИ
+// ==========================================
 function getWineMultiplier() {
     return 1 + gameState.wines.reduce((sum, w) => sum + (w.crafted * w.boost), 0);
 }
@@ -132,6 +190,7 @@ window.claimQuest = function(index) {
         addXp(q.rewardXp);
         playSFX(784, 'triangle', 0.2);
         alert(`🎁 Нагороду взято: +${q.rewardCoins} ₴ та +${q.rewardXp} XP! Файний ґазда!`);
+        saveGame();
         updateUI();
     }
 };
@@ -145,6 +204,7 @@ window.craftWine = function(index) {
         w.crafted += 1;
         playSFX(659, 'sine', 0.2);
         alert(`🍷 Закупорено пляшку "${w.name}"! Дохід виростав на +${Math.round(w.boost * 100)}%!`);
+        saveGame();
         updateUI();
     }
 };
@@ -156,6 +216,7 @@ window.buyBograchBoost = function() {
         gameState.bograchTimer += 120;
         playSFX(523, 'square', 0.2);
         alert("🍲 Наїлися-сьте бограчу! Прибуток x3 на 2 мінути!");
+        saveGame();
         updateUI();
     } else {
         alert("Нийсе грошей! Потрібно 500 ₴");
@@ -218,6 +279,7 @@ window.spinWheel = function() {
             if (display) display.innerText = "⭐";
             alert("⭐ Супер приз! +1 Закарпатський Талер!");
         }
+        saveGame();
         updateUI();
     }, 800);
 };
@@ -264,6 +326,7 @@ window.catchRandomEvent = function() {
     gameState.balance += bonus;
     playSFX(784, 'square', 0.2);
     alert(`🍄 Найшов-сь білий гриб під ялицьов! +${Math.floor(bonus)} ₴`);
+    saveGame();
     updateUI();
 };
 
@@ -396,8 +459,14 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+// ==========================================
+// СТАРТ ДОДАТКУ
+// ==========================================
+document.addEventListener('DOMContentLoaded', async () => {
     initDOM();
+    
+    // Вантажимо прогрес з хмари при запуску
+    await loadGameFromServer();
 
     const unlockHandler = () => {
         initAudio();
@@ -421,7 +490,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    setInterval(saveGame, 5000);
+    // Авто-збереження кожні 10 секунд
+    setInterval(saveGame, 10000);
     setInterval(spawnRandomEvent, 18000);
     requestAnimationFrame(gameLoop);
 });
