@@ -3,118 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Закарпатський Ґазда Deluxe</title>
-    <!-- Підключення Supabase SDK та Telegram WebApp -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>Закарпатське Газдинство TG</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="style.css">
+    <script>
+        const setVh = () => {
+            let vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        };
+        window.addEventListener('resize', setVh);
+        setVh();
+    </script>
 </head>
 <body>
-    <div class="game-container">
-        <!-- Шапка гри -->
-        <header class="header-board">
-            <div class="top-info">
-                <div class="level-badge">
-                    <span>👨‍🌾 Ґазда <strong id="player-level">1</strong> рівеня</span>
-                    <div class="xp-bar-bg"><div id="xp-bar-fill" class="xp-bar-fill"></div></div>
-                </div>
-                <div class="currency-badge">
-                    <span class="currency-icon">🪙</span>
-                    <span id="balance" class="currency-amount">0</span>
-                </div>
-                <button id="sound-toggle-btn" onclick="toggleSound()" class="sound-btn">🔊</button>
-            </div>
-            <div class="bottom-info">
-                <div class="income-badge">⚡ +<span id="pps">0</span>/с <span id="boost-indicator" style="display:none; color:#ffeb3b"></span></div>
-                <div class="prestige-badge">⭐ <span id="talers">0</span> Талерів</div>
-            </div>
-        </header>
 
-        <!-- Головна кнопка збору -->
-        <div class="top-shaft">
-            <button id="click-btn" class="tap-button">
-                <span>🍇</span>
-                <span>Збирати Трач (<span id="grape-count">0</span> кг)</span>
+    <header class="top-bar">
+        <div class="stat-badge money-badge">
+            <span class="icon">💰</span>
+            <div class="badge-info">
+                <span class="badge-label">КАСА</span>
+                <div><span id="money-display" class="val">0</span> <small>грн</small></div>
+            </div>
+        </div>
+        <div class="stat-badge ducat-badge">
+            <span class="icon">🪙</span>
+            <div class="badge-info">
+                <span class="badge-label">ДУКАТИ</span>
+                <span id="ducats-display" class="val">0</span>
+            </div>
+        </div>
+        <div class="stat-badge income-badge">
+            <span class="icon">⚡</span>
+            <div class="badge-info">
+                <span class="badge-label">ДОХІД</span>
+                <span class="badge-value">+<span id="passive-income">0</span>/с</span>
+            </div>
+        </div>
+        <!-- Кнопка налаштувань -->
+        <button class="settings-top-btn" onclick="openModal('settings-modal')">⚙️</button>
+    </header>
+
+    <div id="toast-container" class="toast-container"></div>
+
+    <div id="random-event" class="random-event hidden" onclick="handleEventClick()">
+        <span id="event-icon">🪲</span>
+        <span id="event-text">Жук! Тапай!</span>
+    </div>
+
+    <main class="game-container">
+        <section class="surface">
+            <div class="sun"></div>
+            <div class="clouds">
+                <div class="cloud cloud-1">☁️</div>
+                <div class="cloud cloud-2">☁️</div>
+            </div>
+            <div class="mountains"></div>
+            <div class="hills"></div>
+            
+            <button id="tap-btn" class="tap-btn">
+                <div class="btn-shine"></div>
+                <span class="btn-icon">🔨</span>
+                <div class="btn-content">
+                    <span class="btn-text">КЛЕПАТИ МОТИКОВ!</span>
+                    <span class="btn-subtext">+<span id="click-power-display">1</span> грн/тап</span>
+                </div>
             </button>
-        </div>
 
-        <!-- Перемикач вкладок -->
-        <div class="tabs-bar">
-            <button class="tab-btn active" onclick="switchTab('mines')">🌱 Ґражда</button>
-            <button class="tab-btn" onclick="switchTab('winery')">🍷 Пивниця</button>
-            <button class="tab-btn" onclick="switchTab('quests')">📋 Робота</button>
-            <button class="tab-btn" onclick="switchTab('ref')">👥 Куми</button>
-            <button class="tab-btn" onclick="switchTab('top')">🏆 ТОП</button>
-            <button class="tab-btn" onclick="switchTab('prestige')">✈️ Чехи</button>
-        </div>
-
-        <!-- Вкладка 1: Грядки / Бізнеси -->
-        <div id="tab-mines" class="tab-content active">
-            <div id="mines-container" class="mines-vertical-list"></div>
-        </div>
-
-        <!-- Вкладка 2: Винниця (Крафт Вина) -->
-        <div id="tab-winery" class="tab-content">
-            <div class="winery-box">
-                <h2>🍷 Стара Пивниця</h2>
-                <p>Переробляй назбираний трач на крутоє винце й май майже великый ґайз від ґаздівства!</p>
-                <div id="winery-recipes-list" class="winery-recipes"></div>
+            <div class="action-panel">
+                <button class="menu-btn wheel-btn" onclick="openModal('wheel-modal')">🎡 Рулетка</button>
+                <button class="menu-btn boost-btn" onclick="openModal('boosts-modal')">🧪 Допінг</button>
+                <button class="menu-btn quest-btn" onclick="openModal('quests-modal')">📜 Квести</button>
+                <button id="prestige-btn" class="prestige-btn" onclick="doPrestige()">⛵ Сплав</button>
             </div>
-        </div>
+        </section>
 
-        <!-- Вкладка 3: Щоденні Квести -->
-        <div id="tab-quests" class="tab-content">
-            <div class="quests-box">
-                <h2>📋 Порядки на подвір'ї</h2>
-                <p>Роби роботу каждый день, ошби мати файний заробок та шану від сусідув!</p>
-                <div id="quests-list" class="quests-list"></div>
-            </div>
-        </div>
+        <section class="underground">
+            <div id="beds-list" class="beds-container"></div>
+        </section>
+    </main>
 
-        <!-- Вкладка 4: Реферали (Запроси друга) -->
-        <div id="tab-ref" class="tab-content">
-            <div class="quests-box">
-                <h2>👥 Кличу кумів у помагачі</h2>
-                <p>Запрошуй сусідув та кумів у гру! Отримуй <strong>+500 ₴</strong> та <strong>+1 ⭐ Талер</strong> за кожного кума!</p>
-                <p>Твій кум отримає підйомні <strong>+200 ₴</strong> на старт!</p>
-                
-                <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin: 15px 0;">
-                    <p>Запрошено кумів: <strong id="ref-count" style="color:#ffd54f;">0</strong></p>
-                </div>
-
-                <button class="action-btn" onclick="shareRefLink()">✉️ Надіслати кліку кумові</button>
-            </div>
-        </div>
-
-        <!-- Вкладка 5: Таблиця Лідерів -->
-        <div id="tab-top" class="tab-content">
-            <div class="quests-box">
-                <h2>🏆 Найфайніші Ґазди Району</h2>
-                <p>Рейтинг формується за загально заробленими грошима!</p>
-                <button class="action-btn" onclick="loadLeaderboard()" style="margin-bottom: 15px;">🔄 Оновити ТОП</button>
-                <div id="leaderboard-list" class="quests-list">
-                    <p>Завантаження рейтингу...</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Вкладка 6: Заробітки (Престиж) -->
-        <div id="tab-prestige" class="tab-content">
-            <div class="prestige-box">
-                <h2>Поїздка у Чехи 🧳</h2>
-                <p>Скинь усе обійстя й лишайся файним ґаздою взамін на <strong>Закарпатські Талери</strong> (+10% до ґешефту за кожен).</p>
-                <div class="prestige-reward">Урвеш за путь: <br><strong id="pending-talers">0</strong> ⭐</div>
-                <button class="action-btn prestige" onclick="doPrestige()">Айдав у Чехи!</button>
-            </div>
+    <!-- Модалки -->
+    <div id="wheel-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>🎡 Колесо Фортуни</h3>
+            <p>Випробуй газдівську удачу!</p>
+            <div id="wheel-display" class="wheel-box">❓</div>
+            <button class="btn-action" onclick="spinWheel()">КРУТИТИ</button>
+            <button class="btn-close" onclick="closeModal('wheel-modal')">Закрити</button>
         </div>
     </div>
 
-    <!-- Випадкова подія (Гриб / Скарб) -->
-    <div id="random-event" class="random-event" onclick="catchRandomEvent()">🍄</div>
+    <div id="boosts-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>🧪 Закарпатські Допінги</h3>
+            <div class="boosts-list">
+                <div class="boost-card">
+                    <div><strong>🍶 Палинка (x5 Тап)</strong><br><small>30 сек • 500 грн</small></div>
+                    <button class="btn-action" onclick="buyBoost('palynka', 500)">Випити</button>
+                </div>
+                <div class="boost-card">
+                    <div><strong>🥣 Банош (x3 Дохід)</strong><br><small>60 сек • 1500 грн</small></div>
+                    <button class="btn-action" onclick="buyBoost('banosh', 1500)">З'їсти</button>
+                </div>
+            </div>
+            <button class="btn-close" onclick="closeModal('boosts-modal')">Закрити</button>
+        </div>
+    </div>
 
-    <!-- Фонова музика -->
-    <audio id="bg-music" src="music.mp3" loop preload="auto"></audio>
+    <div id="quests-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>📜 Завдання Газдам</h3>
+            <div id="quests-list" class="quests-list"></div>
+            <button class="btn-close" onclick="closeModal('quests-modal')">Закрити</button>
+        </div>
+    </div>
 
-    <script src="app.js"></script>
+    <!-- Модалка налаштувань -->
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>⚙️ Налаштування</h3>
+            <div class="boosts-list">
+                <div class="boost-card">
+                    <div><strong>🎵 Фонова музика</strong></div>
+                    <button id="music-toggle-btn" class="btn-action" onclick="toggleMusic()">Увімкнено</button>
+                </div>
+                <div class="boost-card">
+                    <div><strong>🔊 Звукові ефекти</strong></div>
+                    <button id="sfx-toggle-btn" class="btn-action" onclick="toggleSfx()">Увімкнено</button>
+                </div>
+            </div>
+            <button class="btn-close" onclick="closeModal('settings-modal')">Закрити</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
 </body>
 </html>
