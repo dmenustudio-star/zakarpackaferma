@@ -1,0 +1,357 @@
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    font-family: 'Arial Black', 'Impact', sans-serif;
+}
+
+body {
+    background: linear-gradient(180deg, #5c6bc0 0%, #81c784 40%, #2e7d32 100%);
+    background-attachment: fixed;
+    color: #ffffff;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    user-select: none;
+}
+
+.game-container {
+    width: 100%;
+    max-width: 460px;
+    background: rgba(33, 61, 35, 0.92);
+    backdrop-filter: blur(8px);
+    min-height: 100vh;
+    box-shadow: 0 0 35px rgba(0,0,0,0.6);
+    display: flex;
+    flex-direction: column;
+    border-left: 3px solid #1b5e20;
+    border-right: 3px solid #1b5e20;
+}
+
+.header-board {
+    background: linear-gradient(180deg, #6d4c41 0%, #3e2723 100%);
+    border-bottom: 4px solid #271c19;
+    padding: 10px 12px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.5);
+    border-radius: 0 0 16px 16px;
+}
+
+.top-info, .bottom-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.level-badge {
+    background: #1b120c;
+    border: 2px solid #ffb74d;
+    border-radius: 12px;
+    padding: 4px 8px;
+    font-size: 11px;
+    color: #ffe0b2;
+    width: 40%;
+}
+
+.xp-bar-bg {
+    height: 6px;
+    background: #000;
+    border-radius: 3px;
+    margin-top: 3px;
+    overflow: hidden;
+}
+
+.xp-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #4caf50, #00e676);
+}
+
+.currency-badge {
+    background: #120a07;
+    border: 2px solid #ffd54f;
+    border-radius: 16px;
+    padding: 4px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.currency-amount {
+    font-size: 16px;
+    color: #ffeb3b;
+    text-shadow: 1px 1px 0 #000;
+}
+
+.sound-btn {
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+}
+
+.income-badge, .prestige-badge {
+    background: #1b2612;
+    border: 1px solid #aed581;
+    border-radius: 8px;
+    padding: 3px 8px;
+    font-size: 11px;
+    color: #dce775;
+}
+
+.prestige-badge {
+    background: #271c19;
+    border-color: #ffb74d;
+    color: #ffe0b2;
+}
+
+.top-shaft {
+    padding: 10px;
+}
+
+.tap-button {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(180deg, #81c784 0%, #2e7d32 100%);
+    border: 3px solid #a5d6a7;
+    border-radius: 16px;
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #1b5e20, 0 8px 15px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform 0.05s;
+}
+
+.tap-button:active {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 #1b5e20;
+}
+
+.tabs-bar {
+    display: flex;
+    background: #271c19;
+    overflow-x: auto;
+}
+
+.tab-btn {
+    flex: 1;
+    min-width: 75px;
+    padding: 10px 4px;
+    background: transparent;
+    border: none;
+    color: #bcaaa4;
+    font-size: 11px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.tab-btn.active {
+    color: #ffeb3b;
+    background: #4e342e;
+    border-bottom: 3px solid #ffa726;
+}
+
+.tab-content {
+    display: none;
+    padding-bottom: 20px;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.mines-vertical-list {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.mine-shaft {
+    background: linear-gradient(180deg, #4e342e 0%, #271c19 100%);
+    border: 3px solid #6d4c41;
+    border-radius: 14px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+}
+
+.mine-shaft.locked {
+    opacity: 0.5;
+    filter: grayscale(0.8);
+}
+
+.mine-avatar {
+    width: 48px;
+    height: 48px;
+    background: #1b120c;
+    border: 2px solid #ffa726;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    position: relative;
+}
+
+.mine-level-badge {
+    position: absolute;
+    bottom: -5px;
+    background: #e65100;
+    color: #fff;
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 6px;
+}
+
+.mine-details {
+    flex: 1;
+}
+
+.mine-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #ffe0b2;
+}
+
+.progress-container {
+    height: 10px;
+    background: #120a07;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-top: 5px;
+}
+
+.progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #ffb74d, #76ff03);
+}
+
+.lvl-up-btn {
+    background: linear-gradient(180deg, #ffa726 0%, #fb8c00 100%);
+    border: 2px solid #ffe0b2;
+    border-radius: 12px;
+    color: white;
+    padding: 8px;
+    min-width: 85px;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #e65100;
+}
+
+.lvl-up-btn:disabled {
+    background: #455a64;
+    border-color: #78909c;
+    box-shadow: none;
+    opacity: 0.6;
+}
+
+/* Крафт Вина, Квести, Лотерея */
+.winery-box, .quests-box, .wheel-box, .prestige-box, .boost-box {
+    padding: 16px;
+    text-align: center;
+    background: rgba(39, 28, 25, 0.95);
+    margin: 12px;
+    border-radius: 16px;
+    border: 2px solid #6d4c41;
+}
+
+.winery-recipe-card, .quest-card {
+    background: #1b120c;
+    border: 2px solid #5d4037;
+    border-radius: 12px;
+    padding: 10px;
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+}
+
+.recipe-info h4, .quest-info h4 {
+    margin: 0 0 4px 0;
+    color: #ffb74d;
+    font-size: 13px;
+}
+
+.recipe-info p, .quest-info p {
+    margin: 0;
+    font-size: 10px;
+    color: #d7ccc8;
+}
+
+.craft-btn, .claim-btn {
+    background: #2e7d32;
+    border: 1px solid #81c784;
+    color: white;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.craft-btn:disabled {
+    background: #424242;
+    border-color: #616161;
+}
+
+.wheel-display {
+    font-size: 55px;
+    margin: 10px auto;
+    width: 90px;
+    height: 90px;
+    background: #1b120c;
+    border: 3px solid #ffa726;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-btn {
+    background: linear-gradient(180deg, #ffa726 0%, #e65100 100%);
+    border: 2px solid #ffe0b2;
+    border-radius: 12px;
+    color: white;
+    padding: 12px;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #bf360c;
+    width: 100%;
+}
+
+.action-btn.boost {
+    background: linear-gradient(180deg, #e53935 0%, #b71c1c 100%);
+    box-shadow: 0 4px 0 #5f0909;
+}
+
+.action-btn.prestige {
+    background: linear-gradient(180deg, #42a5f5 0%, #1565c0 100%);
+    box-shadow: 0 4px 0 #0d47a1;
+}
+
+.random-event {
+    position: fixed;
+    font-size: 40px;
+    cursor: pointer;
+    display: none;
+    z-index: 100;
+    animation: bounce 0.8s infinite alternate;
+}
+
+@keyframes bounce {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-10px); }
+}

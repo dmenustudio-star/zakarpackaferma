@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Закарпатський Ґазда Deluxe</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="game-container">
+        <!-- Шапка гри -->
+        <header class="header-board">
+            <div class="top-info">
+                <div class="level-badge">
+                    <span>👨‍🌾 Ґазда <strong id="player-level">1</strong> рівеня</span>
+                    <div class="xp-bar-bg"><div id="xp-bar-fill" class="xp-bar-fill"></div></div>
+                </div>
+                <div class="currency-badge">
+                    <span class="currency-icon">🪙</span>
+                    <span id="balance" class="currency-amount">0</span>
+                </div>
+                <button id="sound-toggle-btn" onclick="toggleSound()" class="sound-btn">🔊</button>
+            </div>
+            <div class="bottom-info">
+                <div class="income-badge">⚡ +<span id="pps">0</span>/с <span id="boost-indicator" style="display:none; color:#ffeb3b"></span></div>
+                <div class="prestige-badge">⭐ <span id="talers">0</span> Талерів</div>
+            </div>
+        </header>
+
+        <!-- Головна кнопка збору -->
+        <div class="top-shaft">
+            <button id="click-btn" class="tap-button">
+                <span>🍇</span>
+                <span>Збирати Трач (<span id="grape-count">0</span> кг)</span>
+            </button>
+        </div>
+
+        <!-- Перемикач вкладок -->
+        <div class="tabs-bar">
+            <button class="tab-btn active" onclick="switchTab('mines')">🌱 Ґражда</button>
+            <button class="tab-btn" onclick="switchTab('winery')">🍷 Пивниця</button>
+            <button class="tab-btn" onclick="switchTab('quests')">📋 Робота</button>
+            <button class="tab-btn" onclick="switchTab('wheel')">🎰 Ярмарок</button>
+            <button class="tab-btn" onclick="switchTab('prestige')">✈️ Чехи</button>
+        </div>
+
+        <!-- Вкладка 1: Грядки / Бізнеси -->
+        <div id="tab-mines" class="tab-content active">
+            <div id="mines-container" class="mines-vertical-list"></div>
+        </div>
+
+        <!-- Вкладка 2: Винниця (Крафт Вина) -->
+        <div id="tab-winery" class="tab-content">
+            <div class="winery-box">
+                <h2>🍷 Стара Пивниця</h2>
+                <p>Переробляй назбираний трач на крутоє винце й май майже великый ґайз від ґаздівства!</p>
+                <div id="winery-recipes-list" class="winery-recipes"></div>
+            </div>
+        </div>
+
+        <!-- Вкладка 3: Щоденні Квести -->
+        <div id="tab-quests" class="tab-content">
+            <div class="quests-box">
+                <h2>📋 Порядки на подвір'ї</h2>
+                <p>Роби роботу каждый день, ошби мати файний заробок та шану від сусідув!</p>
+                <div id="quests-list" class="quests-list"></div>
+            </div>
+        </div>
+
+        <!-- Вкладка 4: Лотерея та Покращення -->
+        <div id="tab-wheel" class="tab-content">
+            <div class="wheel-box">
+                <h2>🎰 Ярмаркова Рулетка</h2>
+                <p>Вигравай заткані гроші, фортуну та талери!</p>
+                <div class="wheel-display" id="wheel-result">❓</div>
+                <button id="spin-btn" class="action-btn" onclick="spinWheel()">Крутити (100 ₴)</button>
+            </div>
+            
+            <div class="boost-box">
+                <h3>🧪 Гарячий Бограч (Прибутковий x3)</h3>
+                <p>Зайиш файного бограчу — і гевель наварює утричі май бистро на 2 мінути!</p>
+                <button class="action-btn boost" onclick="buyBograchBoost()">З'їсти Бограч (500 ₴)</button>
+            </div>
+        </div>
+
+        <!-- Вкладка 5: Заробітки (Престиж) -->
+        <div id="tab-prestige" class="tab-content">
+            <div class="prestige-box">
+                <h2>Поїздка у Чехи 🧳</h2>
+                <p>Скинь усе обійстя й лишайся файним ґаздою взамін на <strong>Закарпатські Талери</strong> (+10% до ґешефту за кожен).</p>
+                <div class="prestige-reward">Урвеш за путь: <br><strong id="pending-talers">0</strong> ⭐</div>
+                <button class="action-btn prestige" onclick="doPrestige()">Айдав у Чехи!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Випадкова подія (Гриб / Скарб) -->
+    <div id="random-event" class="random-event" onclick="catchRandomEvent()">🍄</div>
+
+    <!-- Фонова музика (покладіть файл music.mp3 поруч) -->
+    <audio id="bg-music" src="music.mp3" loop preload="auto"></audio>
+
+    <script src="app.js"></script>
+</body>
+</html>
