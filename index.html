@@ -39,7 +39,6 @@
                 <span class="badge-value">+<span id="passive-income">0</span>/с</span>
             </div>
         </div>
-        <!-- Кнопка налаштувань -->
         <button class="settings-top-btn" onclick="openModal('settings-modal')">⚙️</button>
     </header>
 
@@ -73,6 +72,7 @@
                 <button class="menu-btn wheel-btn" onclick="openModal('wheel-modal')">🎡 Рулетка</button>
                 <button class="menu-btn boost-btn" onclick="openModal('boosts-modal')">🧪 Допінг</button>
                 <button class="menu-btn quest-btn" onclick="openModal('quests-modal')">📜 Квести</button>
+                <button class="menu-btn leader-btn" onclick="openLeaderboard()">🏆 Лідери</button>
                 <button id="prestige-btn" class="prestige-btn" onclick="doPrestige()">⛵ Сплав</button>
             </div>
         </section>
@@ -118,7 +118,19 @@
         </div>
     </div>
 
-    <!-- Модалка налаштувань -->
+    <!-- Модалка Таблиці лідерів -->
+    <div id="leaderboard-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>🏆 Рейтинг Газдів</h3>
+            <p><small>Твій газдівський статус серед найкращих</small></p>
+            <div id="leaderboard-list" class="quests-list" style="max-height: 180px; overflow-y: auto;">
+                <!-- Сюди завантажиться рейтинг -->
+            </div>
+            <button class="btn-close" onclick="closeModal('leaderboard-modal')">Закрити</button>
+        </div>
+    </div>
+
+    <!-- Модалка Налаштувань -->
     <div id="settings-modal" class="modal hidden">
         <div class="modal-content">
             <h3>⚙️ Налаштування</h3>

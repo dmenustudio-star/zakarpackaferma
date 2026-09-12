@@ -57,6 +57,20 @@ body {
 .money-badge .val { color: #ffd54f; }
 .ducat-badge .val { color: #ffb74d; }
 
+.settings-top-btn {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+}
+.settings-top-btn:active { transform: scale(0.9); }
+
 .game-container { 
     display: flex; 
     flex-direction: column; 
@@ -109,17 +123,18 @@ body {
 .tap-btn:active { transform: translateX(-50%) scale(0.96); box-shadow: 0 2px 0 #b26a00; }
 
 .action-panel {
-    position: absolute; top: 8px; left: 8px; right: 8px;
-    display: flex; gap: 4px; justify-content: space-between;
+    position: absolute; top: 8px; left: 8px; right: 45px;
+    display: flex; gap: 3px; justify-content: space-between;
 }
 
 .menu-btn {
-    padding: 5px 2px; border-radius: 8px; border: 1.5px solid #fff;
-    font-size: 8px; font-weight: 700; color: #fff; cursor: pointer; flex: 1; text-align: center;
+    padding: 4px 2px; border-radius: 6px; border: 1.2px solid #fff;
+    font-size: 7px; font-weight: 700; color: #fff; cursor: pointer; flex: 1; text-align: center;
 }
 .wheel-btn { background: #ab47bc; border-color: #e1bee7; }
 .boost-btn { background: #ff7043; border-color: #ffccbc; }
 .quest-btn { background: #26a69a; border-color: #b2dfdb; }
+.leader-btn { background: #f57f17; border-color: #ffe082; }
 
 .prestige-btn {
     position: absolute; bottom: 10px; right: 8px; padding: 6px 8px;
@@ -184,26 +199,10 @@ body {
 }
 .wheel-box { font-size: 32px; margin: 10px 0; }
 .boosts-list, .quests-list { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; text-align: left; }
-.boost-card, .quest-item { background: rgba(255,255,255,0.05); padding: 6px 8px; border-radius: 8px; font-size: 9px; display: flex; justify-content: space-between; align-items: center; }
+.boost-card, .quest-item, .leader-item { background: rgba(255,255,255,0.05); padding: 6px 8px; border-radius: 8px; font-size: 9px; display: flex; justify-content: space-between; align-items: center; }
+.leader-item.me { background: rgba(255, 213, 79, 0.2); border: 1px solid #ffd54f; }
 .btn-close { margin-top: 6px; background: #e53935; border: none; padding: 5px 12px; border-radius: 6px; color: #fff; font-weight: 700; cursor: pointer; }
 
 .hidden { display: none !important; }
 .toast-container { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 4px; pointer-events: none; width: 90%; align-items: center; }
 .toast { background: rgba(0, 0, 0, 0.9); border: 1.5px solid #ffd54f; color: #fff; padding: 5px 12px; border-radius: 16px; font-size: 9px; font-weight: 700; text-align: center; }
-
-.settings-top-btn {
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-    width: 34px;
-    height: 34px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    cursor: pointer;
-    transition: transform 0.1s ease;
-}
-.settings-top-btn:active {
-    transform: scale(0.9);
-}

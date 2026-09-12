@@ -7,8 +7,7 @@ if (tg) {
     } catch(e){} 
 }
 
-// Налаштування аудіо та музики
-const bgMusic = new Audio('music.mp3'); // Заміни 'music.mp3' на посилання або файл фонової музики
+const bgMusic = new Audio('music.mp3'); 
 bgMusic.loop = true;
 bgMusic.volume = 0.4;
 
@@ -83,14 +82,60 @@ const defaultState = {
 
 let gameState = defaultState;
 
+function saveGame() {
+    try {
+        gameState.lastOnline = Date.now();
+        localStorage.setItem('zakarpattia_farm_save_v8', JSON.stringify(gameState));
+    } catch(e) {}
+}
+
 try {
-    const loaded = localStorage.getItem('zakarpattia_farm_save_v6');
-    if (loaded) gameState = { ...defaultState, ...JSON.parse(loaded) };
+    const loaded = localStorage.getItem('zakarpattia_farm_save_v8');
+    if (loaded) {
+        const parsed = JSON.parse(loaded);
+        gameState = { 
+            ...defaultState, 
+            ...parsed,
+            activeBoosts: { ...defaultState.activeBoosts, ...(parsed.activeBoosts || {}) },
+            settings: { ...defaultState.settings, ...(parsed.settings || {}) },
+            beds: defaultState.beds.map(defaultBed => {
+                const savedBed = parsed.beds?.find(b => b.id === defaultBed.id);
+                return savedBed ? { ...defaultBed, ...savedBed } : defaultBed;
+            }),
+            quests: defaultState.quests.map(defaultQ => {
+                const savedQ = parsed.quests?.find(q => q.id === defaultQ.id);
+                return savedQ ? { ...defaultQ, ...savedQ } : defaultQ;
+            })
+        };
+    }
 } catch(e) {
     gameState = defaultState;
 }
 
-// Автоматичний запуск музики після першого тапа користувача (вимога браузерів)
+const now = Date.now();
+gameState.beds.forEach(bed => {
+    if (!bed.unlocked && bed.unlockEndTime > 0 && now >= bed.unlockEndTime) {
+        bed.unlocked = true;
+        bed.level = 1;
+        bed.unlockEndTime = 0;
+    }
+});
+
+const offlineTimeSec = Math.floor((now - (gameState.lastOnline || now)) / 1000);
+if (offlineTimeSec > 10) {
+    const incomeMultiplier = (gameState.activeBoosts?.banoshTimer > 0 ? 3 : 1) * (1 + gameState.ducats * 0.15);
+    const passiveBase = gameState.beds.reduce((acc, b) => acc + (b.unlocked ? b.level * b.baseIncome : 0), 0) * incomeMultiplier;
+    const earnedOffline = Math.floor(passiveBase * offlineTimeSec * 0.4);
+    if (earnedOffline > 0) {
+        gameState.money += earnedOffline;
+        setTimeout(() => showToast(`🌙 Офлайн прибуток: +${formatNum(earnedOffline)} грн!`), 800);
+    }
+}
+gameState.lastOnline = now;
+saveGame();
+
+let activeEvent = null;
+
 document.addEventListener('click', () => {
     if (gameState.settings.music && bgMusic.paused) {
         bgMusic.play().catch(() => {});
@@ -129,27 +174,6 @@ function toggleSfx() {
     triggerHaptic('light');
 }
 
-const now = Date.now();
-const offlineTimeSec = Math.floor((now - (gameState.lastOnline || now)) / 1000);
-if (offlineTimeSec > 10) {
-    const passiveBase = gameState.beds.reduce((acc, b) => acc + (b.unlocked ? b.level * b.baseIncome : 0), 0);
-    const earnedOffline = Math.floor(passiveBase * offlineTimeSec * 0.4);
-    if (earnedOffline > 0) {
-        gameState.money += earnedOffline;
-        setTimeout(() => showToast(`🌙 Офлайн прибуток: +${formatNum(earnedOffline)} грн!`), 800);
-    }
-}
-gameState.lastOnline = now;
-
-let activeEvent = null;
-
-function saveGame() {
-    try {
-        gameState.lastOnline = Date.now();
-        localStorage.setItem('zakarpattia_farm_save_v6', JSON.stringify(gameState));
-    } catch(e) {}
-}
-
 function showToast(msg) {
     const container = document.getElementById('toast-container');
     if (!container) return;
@@ -174,6 +198,7 @@ function render() {
             bed.unlocked = true;
             bed.level = 1;
             bed.unlockEndTime = 0;
+            saveGame();
             showToast(`🎉 Грядка "${bed.name}" з'явилася!`);
         }
     });
@@ -380,6 +405,46 @@ function claimQuest(id) {
     }
 }
 
+function openLeaderboard() {
+    openModal('leaderboard-modal');
+    triggerHaptic('light');
+
+    const listContainer = document.getElementById('leaderboard-list');
+    listContainer.innerHTML = '<div style="text-align: center; padding: 10px;">Завантаження рейтингу...</div>';
+
+    const tgUser = tg?.initDataUnsafe?.user;
+    const myName = tgUser ? (tgUser.first_name + (tgUser.last_name ? ' ' + tgUser.last_name : '')) : 'Мій Газдівський Дім';
+    const myScore = gameState.money + (gameState.ducats * 1000);
+
+    let leaders = [
+        { name: 'Іван з Хуста', score: 1250000 },
+        { name: 'Газда Петро', score: 850000 },
+        { name: 'Баба Марія', score: 420000 },
+        { name: 'Федір Джерельний', score: 150000 },
+        { name: 'Копача Вівці', score: 65000 },
+        { name: myName, score: myScore, isMe: true }
+    ];
+
+    leaders.sort((a, b) => b.score - a.score);
+
+    listContainer.innerHTML = '';
+    leaders.forEach((leader, index) => {
+        const item = document.createElement('div');
+        item.className = `leader-item ${leader.isMe ? 'me' : ''}`;
+        
+        let medal = `#${index + 1}`;
+        if (index === 0) medal = '🥇';
+        if (index === 1) medal = '🥈';
+        if (index === 2) medal = '🥉';
+
+        item.innerHTML = `
+            <div><strong>${medal} ${leader.name}</strong></div>
+            <div><span style="color: #ffd54f;">${formatNum(leader.score)}</span> очок</div>
+        `;
+        listContainer.appendChild(item);
+    });
+}
+
 setInterval(() => {
     if (!activeEvent && Math.random() < 0.3) {
         activeEvent = { type: 'bug', reward: Math.floor(gameState.money * 0.2) + 100 };
@@ -461,7 +526,6 @@ setInterval(() => {
 setInterval(saveGame, 5000);
 render();
 
-// Запускаємо фонову музику якщо дозволено налаштуваннями
 if (gameState.settings.music) {
     bgMusic.play().catch(() => {});
 }
