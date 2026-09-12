@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Закарпатський Ґазда Deluxe</title>
-    <link rel="stylesheet" href="style.css">
+    <!-- Підключення Supabase SDK та Telegram WebApp -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="game-container">
@@ -41,7 +43,8 @@
             <button class="tab-btn active" onclick="switchTab('mines')">🌱 Ґражда</button>
             <button class="tab-btn" onclick="switchTab('winery')">🍷 Пивниця</button>
             <button class="tab-btn" onclick="switchTab('quests')">📋 Робота</button>
-            <button class="tab-btn" onclick="switchTab('wheel')">🎰 Ярмарок</button>
+            <button class="tab-btn" onclick="switchTab('ref')">👥 Куми</button>
+            <button class="tab-btn" onclick="switchTab('top')">🏆 ТОП</button>
             <button class="tab-btn" onclick="switchTab('prestige')">✈️ Чехи</button>
         </div>
 
@@ -68,23 +71,34 @@
             </div>
         </div>
 
-        <!-- Вкладка 4: Лотерея та Покращення -->
-        <div id="tab-wheel" class="tab-content">
-            <div class="wheel-box">
-                <h2>🎰 Ярмаркова Рулетка</h2>
-                <p>Вигравай заткані гроші, фортуну та талери!</p>
-                <div class="wheel-display" id="wheel-result">❓</div>
-                <button id="spin-btn" class="action-btn" onclick="spinWheel()">Крутити (100 ₴)</button>
-            </div>
-            
-            <div class="boost-box">
-                <h3>🧪 Гарячий Бограч (Прибутковий x3)</h3>
-                <p>Зайиш файного бограчу — і гевель наварює утричі май бистро на 2 мінути!</p>
-                <button class="action-btn boost" onclick="buyBograchBoost()">З'їсти Бограч (500 ₴)</button>
+        <!-- Вкладка 4: Реферали (Запроси друга) -->
+        <div id="tab-ref" class="tab-content">
+            <div class="quests-box">
+                <h2>👥 Кличу кумів у помагачі</h2>
+                <p>Запрошуй сусідув та кумів у гру! Отримуй <strong>+500 ₴</strong> та <strong>+1 ⭐ Талер</strong> за кожного кума!</p>
+                <p>Твій кум отримає підйомні <strong>+200 ₴</strong> на старт!</p>
+                
+                <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin: 15px 0;">
+                    <p>Запрошено кумів: <strong id="ref-count" style="color:#ffd54f;">0</strong></p>
+                </div>
+
+                <button class="action-btn" onclick="shareRefLink()">✉️ Надіслати кліку кумові</button>
             </div>
         </div>
 
-        <!-- Вкладка 5: Заробітки (Престиж) -->
+        <!-- Вкладка 5: Таблиця Лідерів -->
+        <div id="tab-top" class="tab-content">
+            <div class="quests-box">
+                <h2>🏆 Найфайніші Ґазди Району</h2>
+                <p>Рейтинг формується за загально заробленими грошима!</p>
+                <button class="action-btn" onclick="loadLeaderboard()" style="margin-bottom: 15px;">🔄 Оновити ТОП</button>
+                <div id="leaderboard-list" class="quests-list">
+                    <p>Завантаження рейтингу...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Вкладка 6: Заробітки (Престиж) -->
         <div id="tab-prestige" class="tab-content">
             <div class="prestige-box">
                 <h2>Поїздка у Чехи 🧳</h2>
@@ -98,7 +112,7 @@
     <!-- Випадкова подія (Гриб / Скарб) -->
     <div id="random-event" class="random-event" onclick="catchRandomEvent()">🍄</div>
 
-    <!-- Фонова музика (покладіть файл music.mp3 поруч) -->
+    <!-- Фонова музика -->
     <audio id="bg-music" src="music.mp3" loop preload="auto"></audio>
 
     <script src="app.js"></script>
