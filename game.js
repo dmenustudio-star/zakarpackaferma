@@ -11,6 +11,31 @@ const bgMusic = new Audio('music.mp3');
 bgMusic.loop = true;
 bgMusic.volume = 0.4;
 
+// Ініціалізація рекламного контролера AdsGram
+const adController = window.Adsgram ? window.Adsgram.init({ blockId: "bot-47604" }) : null;
+
+async function watchAdForReward() {
+    triggerHaptic('light');
+    if (!adController) {
+        showToast("⚠️ Рекламний модуль не завантажився!");
+        return;
+    }
+
+    try {
+        const result = await adController.show();
+        if (result.done) {
+            gameState.ducats += 5;
+            triggerHaptic('success');
+            saveGame();
+            render();
+            showToast("🎁 Отримано +5 🪙 Дукатів за рекламу!");
+        }
+    } catch (e) {
+        console.error("Помилка показу реклами:", e);
+        showToast("⚠️ Рекламу не було доведено до кінця.");
+    }
+}
+
 function triggerHaptic(style = 'light') {
     if (tg?.HapticFeedback) {
         try {
@@ -85,12 +110,12 @@ let gameState = defaultState;
 function saveGame() {
     try {
         gameState.lastOnline = Date.now();
-        localStorage.setItem('zakarpattia_farm_save_v8', JSON.stringify(gameState));
+        localStorage.setItem('zakarpattia_farm_save_v9', JSON.stringify(gameState));
     } catch(e) {}
 }
 
 try {
-    const loaded = localStorage.getItem('zakarpattia_farm_save_v8');
+    const loaded = localStorage.getItem('zakarpattia_farm_save_v9');
     if (loaded) {
         const parsed = JSON.parse(loaded);
         gameState = { 

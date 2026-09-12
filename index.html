@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Закарпатське Газдинство TG</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://sad.adsgram.ai/js/adsgram.min.js"></script>
     <link rel="stylesheet" href="style.css">
     <script>
         const setVh = () => {
@@ -72,6 +73,7 @@
                 <button class="menu-btn wheel-btn" onclick="openModal('wheel-modal')">🎡 Рулетка</button>
                 <button class="menu-btn boost-btn" onclick="openModal('boosts-modal')">🧪 Допінг</button>
                 <button class="menu-btn quest-btn" onclick="openModal('quests-modal')">📜 Квести</button>
+                <button class="menu-btn ad-btn" onclick="watchAdForReward()" style="background: #2e7d32; border-color: #81c784;">📺 Реклама</button>
                 <button class="menu-btn leader-btn" onclick="openLeaderboard()">🏆 Лідери</button>
                 <button id="prestige-btn" class="prestige-btn" onclick="doPrestige()">⛵ Сплав</button>
             </div>
@@ -118,19 +120,15 @@
         </div>
     </div>
 
-    <!-- Модалка Таблиці лідерів -->
     <div id="leaderboard-modal" class="modal hidden">
         <div class="modal-content">
             <h3>🏆 Рейтинг Газдів</h3>
             <p><small>Твій газдівський статус серед найкращих</small></p>
-            <div id="leaderboard-list" class="quests-list" style="max-height: 180px; overflow-y: auto;">
-                <!-- Сюди завантажиться рейтинг -->
-            </div>
+            <div id="leaderboard-list" class="quests-list" style="max-height: 180px; overflow-y: auto;"></div>
             <button class="btn-close" onclick="closeModal('leaderboard-modal')">Закрити</button>
         </div>
     </div>
 
-    <!-- Модалка Налаштувань -->
     <div id="settings-modal" class="modal hidden">
         <div class="modal-content">
             <h3>⚙️ Налаштування</h3>
