@@ -74,6 +74,7 @@
                 <button class="menu-btn boost-btn" onclick="openModal('boosts-modal')">🧪 Допінг</button>
                 <button class="menu-btn quest-btn" onclick="openModal('quests-modal')">📜 Квести</button>
                 <button class="menu-btn ad-btn" onclick="watchAdForReward()" style="background: #2e7d32; border-color: #81c784;">📺 Реклама</button>
+                <button class="menu-btn stars-btn" onclick="openModal('stars-modal')" style="background: #ffa726; border-color: #ffe0b2;">⭐ Магазин</button>
                 <button class="menu-btn leader-btn" onclick="openLeaderboard()">🏆 Лідери</button>
                 <button id="prestige-btn" class="prestige-btn" onclick="doPrestige()">⛵ Сплав</button>
             </div>
@@ -117,6 +118,28 @@
             <h3>📜 Завдання Газдам</h3>
             <div id="quests-list" class="quests-list"></div>
             <button class="btn-close" onclick="closeModal('quests-modal')">Закрити</button>
+        </div>
+    </div>
+
+    <div id="stars-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>⭐ Газдівський Лавок</h3>
+            <p><small>Ексклюзивні товари за Telegram Stars</small></p>
+            <div class="boosts-list">
+                <div class="boost-card">
+                    <div><strong>🐈 Кот-Копач (Авто-збір)</strong><br><small>Збирає 100% офлайн • Назавжди</small></div>
+                    <button class="btn-action" onclick="buyWithStars('auto_collector', 50)" style="background: linear-gradient(180deg, #ffa726 0%, #e65100 100%);">⭐ 50 Зірок</button>
+                </div>
+                <div class="boost-card">
+                    <div><strong>🪙 Мішок Дукатів</strong><br><small>Одразу +50 донатних дукатів</small></div>
+                    <button class="btn-action" onclick="buyWithStars('ducats_pack', 25)" style="background: linear-gradient(180deg, #ffa726 0%, #e65100 100%);">⭐ 25 Зірок</button>
+                </div>
+                <div class="boost-card">
+                    <div><strong>🔥 Скриня Газда</strong><br><small>+250 дукатів + x10 Буст на годину</small></div>
+                    <button class="btn-action" onclick="buyWithStars('super_chest', 100)" style="background: linear-gradient(180deg, #ffa726 0%, #e65100 100%);">⭐ 100 Зірок</button>
+                </div>
+            </div>
+            <button class="btn-close" onclick="closeModal('stars-modal')">Закрити</button>
         </div>
     </div>
 

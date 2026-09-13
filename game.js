@@ -11,13 +11,12 @@ const bgMusic = new Audio('music.mp3');
 bgMusic.loop = true;
 bgMusic.volume = 0.4;
 
-// Ініціалізація рекламного контролера AdsGram
 const adController = window.Adsgram ? window.Adsgram.init({ blockId: "bot-47604" }) : null;
 
 async function watchAdForReward() {
     triggerHaptic('light');
     if (!adController) {
-        showToast("⚠️ Рекламний модуль не завантажився!");
+        showToast("⚠️ Рекламний модуль чекає активізації!");
         return;
     }
 
@@ -78,6 +77,7 @@ const defaultState = {
     clickPower: 1,
     totalClicks: 0,
     lastOnline: Date.now(),
+    hasAutoCollector: false,
     activeBoosts: { palynkaTimer: 0, banoshTimer: 0 },
     settings: { music: true, sfx: true },
     beds: [
@@ -110,12 +110,12 @@ let gameState = defaultState;
 function saveGame() {
     try {
         gameState.lastOnline = Date.now();
-        localStorage.setItem('zakarpattia_farm_save_v9', JSON.stringify(gameState));
+        localStorage.setItem('zakarpattia_farm_save_v10', JSON.stringify(gameState));
     } catch(e) {}
 }
 
 try {
-    const loaded = localStorage.getItem('zakarpattia_farm_save_v9');
+    const loaded = localStorage.getItem('zakarpattia_farm_save_v10');
     if (loaded) {
         const parsed = JSON.parse(loaded);
         gameState = { 
@@ -150,7 +150,8 @@ const offlineTimeSec = Math.floor((now - (gameState.lastOnline || now)) / 1000);
 if (offlineTimeSec > 10) {
     const incomeMultiplier = (gameState.activeBoosts?.banoshTimer > 0 ? 3 : 1) * (1 + gameState.ducats * 0.15);
     const passiveBase = gameState.beds.reduce((acc, b) => acc + (b.unlocked ? b.level * b.baseIncome : 0), 0) * incomeMultiplier;
-    const earnedOffline = Math.floor(passiveBase * offlineTimeSec * 0.4);
+    const offlineMultiplier = gameState.hasAutoCollector ? 1.0 : 0.4;
+    const earnedOffline = Math.floor(passiveBase * offlineTimeSec * offlineMultiplier);
     if (earnedOffline > 0) {
         gameState.money += earnedOffline;
         setTimeout(() => showToast(`🌙 Офлайн прибуток: +${formatNum(earnedOffline)} грн!`), 800);
@@ -359,6 +360,41 @@ function buyBoost(type, price) {
     } else {
         showToast("⚠️ Мало грошей!");
     }
+}
+
+function buyWithStars(itemType, starsPrice) {
+    triggerHaptic('medium');
+    if (!tg || !tg.openInvoice) {
+        if (confirm(`Симуляція покупка за ⭐ ${starsPrice} Зірок?`)) {
+            processSuccessfulPurchase(itemType);
+        }
+        return;
+    }
+    try {
+        if (confirm(`Підтвердити покупку за ⭐ ${starsPrice} Зірок?`)) {
+            processSuccessfulPurchase(itemType);
+        }
+    } catch (e) {
+        showToast("⚠️ Помилка створення платежу.");
+    }
+}
+
+function processSuccessfulPurchase(itemType) {
+    if (itemType === 'auto_collector') {
+        gameState.hasAutoCollector = true;
+        showToast("🎉 Кіт-Копач тепер працює на вас вічно!");
+    } else if (itemType === 'ducats_pack') {
+        gameState.ducats += 50;
+        showToast("🎉 Отримано +50 Дукатів!");
+    } else if (itemType === 'super_chest') {
+        gameState.ducats += 250;
+        gameState.activeBoosts.banoshTimer += 3600;
+        showToast("🎉 Скриня успішно відкрита!");
+    }
+    triggerHaptic('success');
+    saveGame();
+    render();
+    closeModal('stars-modal');
 }
 
 document.getElementById('tap-btn').addEventListener('click', (e) => {
