@@ -65,6 +65,7 @@ function playSound(freq, type = 'sine', duration = 0.08) {
 }
 
 function formatNum(num) {
+    if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
     if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
     if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
     if (num >= 1e3) return (num / 1e3).toFixed(1) + 'K';
@@ -72,7 +73,7 @@ function formatNum(num) {
 }
 
 const defaultState = {
-    money: 20,
+    money: 15,
     ducats: 5,
     clickPower: 1,
     totalClicks: 0,
@@ -81,27 +82,38 @@ const defaultState = {
     activeBoosts: { palynkaTimer: 0, banoshTimer: 0 },
     settings: { music: true, sfx: true },
     beds: [
-        { id: 1, name: '🥔 Крумплі', level: 1, basePrice: 15, baseIncome: 1, unlocked: true, unlockEndTime: 0 },
-        { id: 2, name: '🧅 Цибуля', level: 0, basePrice: 60, baseIncome: 4, unlocked: false, unlockEndTime: 0 },
-        { id: 3, name: '🍅 Парадички', level: 0, basePrice: 250, baseIncome: 15, unlocked: false, unlockEndTime: 0 },
-        { id: 4, name: '🥒 Огірки', level: 0, basePrice: 1000, baseIncome: 50, unlocked: false, unlockEndTime: 0 },
-        { id: 5, name: '🌶️ Поперички', level: 0, basePrice: 4000, baseIncome: 180, unlocked: false, unlockEndTime: 0 },
-        { id: 6, name: '🍓 Поземок', level: 0, basePrice: 15000, baseIncome: 600, unlocked: false, unlockEndTime: 0 },
-        { id: 7, name: '🌽 Кіндериця', level: 0, basePrice: 60000, baseIncome: 2200, unlocked: false, unlockEndTime: 0 },
-        { id: 8, name: '🍇 Грозна', level: 0, basePrice: 250000, baseIncome: 8500, unlocked: false, unlockEndTime: 0 },
-        { id: 9, name: '🍏 Яблука', level: 0, basePrice: 1000000, baseIncome: 32000, unlocked: false, unlockEndTime: 0 },
-        { id: 10, name: '🫐 Чорниці', level: 0, basePrice: 4500000, baseIncome: 130000, unlocked: false, unlockEndTime: 0 },
-        { id: 11, name: '🧄 Чеснок', level: 0, basePrice: 20000000, baseIncome: 520000, unlocked: false, unlockEndTime: 0 },
-        { id: 12, name: '🍄 Трюфлі', level: 0, basePrice: 90000000, baseIncome: 2100000, unlocked: false, unlockEndTime: 0 },
-        { id: 13, name: '🍷 Ґраппа', level: 0, basePrice: 400000000, baseIncome: 8800000, unlocked: false, unlockEndTime: 0 },
-        { id: 14, name: '💧 Поляна Квасова', level: 0, basePrice: 2000000000, baseIncome: 38000000, unlocked: false, unlockEndTime: 0 },
-        { id: 15, name: '🌸 Шафран', level: 0, basePrice: 10000000000, baseIncome: 175000000, unlocked: false, unlockEndTime: 0 }
+        { id: 1, name: '🥔 Крумплі', level: 1, basePrice: 20, baseIncome: 1, unlocked: true, unlockEndTime: 0 },
+        { id: 2, name: '🧅 Цибуля', level: 0, basePrice: 85, baseIncome: 4, unlocked: false, unlockEndTime: 0 },
+        { id: 3, name: '🍅 Парадички', level: 0, basePrice: 350, baseIncome: 14, unlocked: false, unlockEndTime: 0 },
+        { id: 4, name: '🥒 Огірки', level: 0, basePrice: 1500, baseIncome: 45, unlocked: false, unlockEndTime: 0 },
+        { id: 5, name: '🌶️ Поперички', level: 0, basePrice: 6500, baseIncome: 160, unlocked: false, unlockEndTime: 0 },
+        { id: 6, name: '🍓 Поземок', level: 0, basePrice: 28000, baseIncome: 550, unlocked: false, unlockEndTime: 0 },
+        { id: 7, name: '🌽 Кіндериця', level: 0, basePrice: 120000, baseIncome: 1900, unlocked: false, unlockEndTime: 0 },
+        { id: 8, name: '🍇 Грозна', level: 0, basePrice: 550000, baseIncome: 7000, unlocked: false, unlockEndTime: 0 },
+        { id: 9, name: '🍏 Яблука', level: 0, basePrice: 2500000, baseIncome: 25000, unlocked: false, unlockEndTime: 0 },
+        { id: 10, name: '🫐 Чорниці', level: 0, basePrice: 12000000, baseIncome: 95000, unlocked: false, unlockEndTime: 0 },
+        { id: 11, name: '🧄 Чеснок', level: 0, basePrice: 55000000, baseIncome: 380000, unlocked: false, unlockEndTime: 0 },
+        { id: 12, name: '🍄 Трюфлі', level: 0, basePrice: 250000000, baseIncome: 1500000, unlocked: false, unlockEndTime: 0 },
+        { id: 13, name: '🍷 Ґраппа', level: 0, basePrice: 1200000000, baseIncome: 6200000, unlocked: false, unlockEndTime: 0 },
+        { id: 14, name: '💧 Поляна Квасова', level: 0, basePrice: 6000000000, baseIncome: 26000000, unlocked: false, unlockEndTime: 0 },
+        { id: 15, name: '🌸 Шафран', level: 0, basePrice: 30000000000, baseIncome: 110000000, unlocked: false, unlockEndTime: 0 },
+        // Нові хардкорні рівні (16-25)
+        { id: 16, name: '🍯 Карпатський Мед', level: 0, basePrice: 150000000000, baseIncome: 480000000, unlocked: false, unlockEndTime: 0 },
+        { id: 17, name: '🫕 Бриндза з полонини', level: 0, basePrice: 800000000000, baseIncome: 2100000000, unlocked: false, unlockEndTime: 0 },
+        { id: 18, name: '🦌 Роги оленя', level: 0, basePrice: 4200000000000, baseIncome: 9500000000, unlocked: false, unlockEndTime: 0 },
+        { id: 19, name: '🪵 Карпатський Сруб', level: 0, basePrice: 22000000000000, baseIncome: 44000000000, unlocked: false, unlockEndTime: 0 },
+        { id: 20, name: '🦅 Перо Беркута', level: 0, basePrice: 120000000000000, baseIncome: 200000000000, unlocked: false, unlockEndTime: 0 },
+        { id: 21, name: '🌿 Трава Мольфара', level: 0, basePrice: 650000000000000, baseIncome: 920000000000, unlocked: false, unlockEndTime: 0 },
+        { id: 22, name: '💎 Карпатський Самоцвіт', level: 0, basePrice: 3500000000000000, baseIncome: 4300000000000, unlocked: false, unlockEndTime: 0 },
+        { id: 23, name: '👑 Корона Довбуша', level: 0, basePrice: 18000000000000000, baseIncome: 20000000000000, unlocked: false, unlockEndTime: 0 },
+        { id: 24, name: '⚡ Сила Трембіти', level: 0, basePrice: 95000000000000000, baseIncome: 98000000000000, unlocked: false, unlockEndTime: 0 },
+        { id: 25, name: '🌌 Дух Синевиру', level: 0, basePrice: 500000000000000000, baseIncome: 500000000000000, unlocked: false, unlockEndTime: 0 }
     ],
     quests: [
-        { id: 1, text: 'Зробити 100 тапів', target: 100, current: 0, reward: 250, isDucat: false, done: false },
-        { id: 2, text: 'Назбирати 5,000 грн', target: 5000, current: 0, reward: 5, isDucat: true, done: false },
-        { id: 3, text: 'Відкрити 5 грядок', target: 5, current: 1, reward: 10, isDucat: true, done: false },
-        { id: 4, text: 'Відкрити 10 грядок', target: 10, current: 1, reward: 25, isDucat: true, done: false }
+        { id: 1, text: 'Зробити 150 тапів', target: 150, current: 0, reward: 300, isDucat: false, done: false },
+        { id: 2, text: 'Назбирати 25,000 грн', target: 25000, current: 0, reward: 8, isDucat: true, done: false },
+        { id: 3, text: 'Відкрити 10 грядок', target: 10, current: 1, reward: 15, isDucat: true, done: false },
+        { id: 4, text: 'Відкрити 20 грядок', target: 20, current: 1, reward: 40, isDucat: true, done: false }
     ]
 };
 
@@ -110,12 +122,12 @@ let gameState = defaultState;
 function saveGame() {
     try {
         gameState.lastOnline = Date.now();
-        localStorage.setItem('zakarpattia_farm_save_v10', JSON.stringify(gameState));
+        localStorage.setItem('zakarpattia_farm_save_v11', JSON.stringify(gameState));
     } catch(e) {}
 }
 
 try {
-    const loaded = localStorage.getItem('zakarpattia_farm_save_v10');
+    const loaded = localStorage.getItem('zakarpattia_farm_save_v11');
     if (loaded) {
         const parsed = JSON.parse(loaded);
         gameState = { 
@@ -251,8 +263,9 @@ function render() {
         const card = document.createElement('div');
         card.className = 'bed-card';
 
+        // Збільшена складність: коефіцієнт ціни апгрейду 1.22 замість 1.17
         if (bed.unlocked) {
-            const cost = Math.floor(bed.basePrice * Math.pow(1.17, bed.level));
+            const cost = Math.floor(bed.basePrice * Math.pow(1.22, bed.level));
             const canAfford = gameState.money >= cost;
             const currentIncome = Math.floor(bed.level * bed.baseIncome * incomeMultiplier);
 
@@ -267,7 +280,7 @@ function render() {
             `;
         } else if (bed.unlockEndTime > 0) {
             const timeLeft = Math.max(0, Math.ceil((bed.unlockEndTime - currentTime) / 1000));
-            const speedUpDucats = 3;
+            const speedUpDucats = 5;
             const canAffordDucats = gameState.ducats >= speedUpDucats;
 
             card.innerHTML = `
@@ -297,7 +310,7 @@ function render() {
 function upgradeBed(id) {
     const bed = gameState.beds.find(b => b.id === id);
     if (!bed) return;
-    const cost = Math.floor(bed.basePrice * Math.pow(1.17, bed.level));
+    const cost = Math.floor(bed.basePrice * Math.pow(1.22, bed.level));
     if (gameState.money >= cost) {
         gameState.money -= cost;
         bed.level++;
@@ -315,7 +328,7 @@ function unlockBed(id) {
         gameState.money -= bed.basePrice;
         
         const bedIndex = gameState.beds.findIndex(b => b.id === id);
-        const minutesToAdd = bedIndex * 15;
+        const minutesToAdd = (bedIndex + 1) * 20; // довше будівництво для хардкору
         
         bed.unlockEndTime = Date.now() + minutesToAdd * 60 * 1000;
         
@@ -330,7 +343,7 @@ function unlockBed(id) {
 function speedUpBed(id) {
     const bed = gameState.beds.find(b => b.id === id);
     if (!bed || bed.unlockEndTime === 0) return;
-    const speedUpDucats = 3;
+    const speedUpDucats = 5;
     
     if (gameState.ducats >= speedUpDucats) {
         gameState.ducats -= speedUpDucats;
@@ -403,8 +416,8 @@ document.getElementById('tap-btn').addEventListener('click', (e) => {
     }
 
     const tapMultiplier = (gameState.activeBoosts?.palynkaTimer > 0 ? 5 : 1) * (1 + gameState.ducats * 0.15);
-    const isCrit = Math.random() < 0.15;
-    const earned = Math.floor(gameState.clickPower * tapMultiplier * (isCrit ? 5 : 1));
+    const isCrit = Math.random() < 0.12; // Зменшений шанс криту для ускладнення
+    const earned = Math.floor(gameState.clickPower * tapMultiplier * (isCrit ? 4 : 1));
 
     gameState.money += earned;
     gameState.totalClicks++;
@@ -478,11 +491,11 @@ function openLeaderboard() {
     const myScore = gameState.money + (gameState.ducats * 1000);
 
     let leaders = [
-        { name: 'Іван з Хуста', score: 1250000 },
-        { name: 'Газда Петро', score: 850000 },
-        { name: 'Баба Марія', score: 420000 },
-        { name: 'Федір Джерельний', score: 150000 },
-        { name: 'Копача Вівці', score: 65000 },
+        { name: 'Іван з Хуста', score: 125000000 },
+        { name: 'Газда Петро', score: 85000000 },
+        { name: 'Баба Марія', score: 42000000 },
+        { name: 'Федір Джерельний', score: 15000000 },
+        { name: 'Копача Вівці', score: 6500000 },
         { name: myName, score: myScore, isMe: true }
     ];
 
@@ -507,8 +520,8 @@ function openLeaderboard() {
 }
 
 setInterval(() => {
-    if (!activeEvent && Math.random() < 0.3) {
-        activeEvent = { type: 'bug', reward: Math.floor(gameState.money * 0.2) + 100 };
+    if (!activeEvent && Math.random() < 0.25) {
+        activeEvent = { type: 'bug', reward: Math.floor(gameState.money * 0.15) + 50 };
         document.getElementById('random-event').classList.remove('hidden');
         triggerHaptic('medium');
         playSound(800, 'sawtooth');
@@ -517,9 +530,9 @@ setInterval(() => {
                 activeEvent = null;
                 document.getElementById('random-event').classList.add('hidden');
             }
-        }, 6000);
+        }, 5000);
     }
-}, 10000);
+}, 12000);
 
 function handleEventClick() {
     if (activeEvent) {
@@ -536,9 +549,9 @@ function handleEventClick() {
 function spinWheel() {
     triggerHaptic('medium');
     const prizes = [
-        { name: '+500 грн', action: () => gameState.money += 500 },
-        { name: '+2 🪙 Дукати', action: () => gameState.ducats += 2 },
-        { name: '+5,000 грн', action: () => gameState.money += 5000 },
+        { name: '+300 грн', action: () => gameState.money += 300 },
+        { name: '+1 🪙 Дукат', action: () => gameState.ducats += 1 },
+        { name: '+3,000 грн', action: () => gameState.money += 3000 },
         { name: 'Нічого 😢', action: () => {} }
     ];
     const win = prizes[Math.floor(Math.random() * prizes.length)];
@@ -557,10 +570,10 @@ function openModal(id) { triggerHaptic('light'); document.getElementById(id).cla
 function closeModal(id) { triggerHaptic('light'); document.getElementById(id).classList.add('hidden'); }
 
 function doPrestige() {
-    if (gameState.money < 50000) return showToast("⚠️ Потрібно 50,000 грн!");
-    const earned = Math.floor(gameState.money / 50000);
+    if (gameState.money < 200000) return showToast("⚠️ Потрібно 200,000 грн для Сплаву!");
+    const earned = Math.floor(gameState.money / 200000);
     gameState.ducats += earned;
-    gameState.money = 20;
+    gameState.money = 15;
     gameState.beds.forEach((b, idx) => { b.level = idx === 0 ? 1 : 0; b.unlocked = idx === 0; b.unlockEndTime = 0; });
     triggerHaptic('heavy');
     saveGame(); 
