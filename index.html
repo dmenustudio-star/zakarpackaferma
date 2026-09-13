@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Закарпатське Газдинство TG</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://sad.adsgram.ai/js/adsgram.min.js"></script>
     <link rel="stylesheet" href="style.css">
     <script>
         const setVh = () => {
@@ -45,9 +44,14 @@
 
     <div id="toast-container" class="toast-container"></div>
 
+    <!-- Сповіщення про складні умови (погода / війт) -->
+    <div id="weather-banner" class="weather-banner hidden" style="background: rgba(183, 28, 28, 0.9); color: white; padding: 6px 12px; text-align: center; font-size: 13px; font-weight: bold;">
+        ⚠️ <span id="weather-text">Увага: негода на полонині!</span>
+    </div>
+
     <div id="random-event" class="random-event hidden" onclick="handleEventClick()">
         <span id="event-icon">🪲</span>
-        <span id="event-text">Жук! Тапай!</span>
+        <span id="event-text">Когут-розбишака! Тапай!</span>
     </div>
 
     <main class="game-container">
@@ -66,15 +70,19 @@
                 <div class="btn-content">
                     <span class="btn-text">КЛЕПАТИ МОТИКОВ!</span>
                     <span class="btn-subtext">+<span id="click-power-display">1</span> грн/тап</span>
+                    <span id="tool-durability" style="font-size: 10px; color: #ffeb3b;">Знос інструменту: 100%</span>
                 </div>
             </button>
+
+            <!-- Кнопка термінового ремонту мотики -->
+            <div style="text-align: center; margin-top: -10px; margin-bottom: 10px; z-index: 5; position: relative;">
+                <button onclick="repairTool()" style="background: #5d4037; color: #fff; border: 1px solid #8d6e63; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer;">🛠️ Кувати мотику (50 грн)</button>
+            </div>
 
             <div class="action-panel">
                 <button class="menu-btn wheel-btn" onclick="openModal('wheel-modal')">🎡 Рулетка</button>
                 <button class="menu-btn boost-btn" onclick="openModal('boosts-modal')">🧪 Допінг</button>
                 <button class="menu-btn quest-btn" onclick="openModal('quests-modal')">📜 Квести</button>
-                <button class="menu-btn ad-btn" onclick="watchAdForReward()" style="background: #2e7d32; border-color: #81c784;">📺 Реклама</button>
-                <button class="menu-btn stars-btn" onclick="openModal('stars-modal')" style="background: #ffa726; border-color: #ffe0b2;">⭐ Магазин</button>
                 <button class="menu-btn leader-btn" onclick="openLeaderboard()">🏆 Лідери</button>
                 <button id="prestige-btn" class="prestige-btn" onclick="doPrestige()">⛵ Сплав</button>
             </div>
@@ -101,7 +109,7 @@
             <h3>🧪 Закарпатські Допінги</h3>
             <div class="boosts-list">
                 <div class="boost-card">
-                    <div><strong>🍶 Палинка (x5 Тап)</strong><br><small>30 сек • 500 грн</small></div>
+                    <div><strong>🍶 Палинка (x5 Тап)</strong><br><small>30 сек • 500 грн (є ризик похмілля)</small></div>
                     <button class="btn-action" onclick="buyBoost('palynka', 500)">Випити</button>
                 </div>
                 <div class="boost-card">
@@ -118,28 +126,6 @@
             <h3>📜 Завдання Газдам</h3>
             <div id="quests-list" class="quests-list"></div>
             <button class="btn-close" onclick="closeModal('quests-modal')">Закрити</button>
-        </div>
-    </div>
-
-    <div id="stars-modal" class="modal hidden">
-        <div class="modal-content">
-            <h3>⭐ Газдівський Лавок</h3>
-            <p><small>Ексклюзивні товари за Telegram Stars</small></p>
-            <div class="boosts-list">
-                <div class="boost-card">
-                    <div><strong>🐈 Кот-Копач (Авто-збір)</strong><br><small>Збирає 100% офлайн • Назавжди</small></div>
-                    <button class="btn-action" onclick="buyWithStars('auto_collector', 50)" style="background: linear-gradient(180deg, #ffa726 0%, #e65100 100%);">⭐ 50 Зірок</button>
-                </div>
-                <div class="boost-card">
-                    <div><strong>🪙 Мішок Дукатів</strong><br><small>Одразу +50 донатних дукатів</small></div>
-                    <button class="btn-action" onclick="buyWithStars('ducats_pack', 25)" style="background: linear-gradient(180deg, #ffa726 0%, #e65100 100%);">⭐ 25 Зірок</button>
-                </div>
-                <div class="boost-card">
-                    <div><strong>🔥 Скриня Газда</strong><br><small>+250 дукатів + x10 Буст на годину</small></div>
-                    <button class="btn-action" onclick="buyWithStars('super_chest', 100)" style="background: linear-gradient(180deg, #ffa726 0%, #e65100 100%);">⭐ 100 Зірок</button>
-                </div>
-            </div>
-            <button class="btn-close" onclick="closeModal('stars-modal')">Закрити</button>
         </div>
     </div>
 

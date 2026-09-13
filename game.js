@@ -11,30 +11,6 @@ const bgMusic = new Audio('music.mp3');
 bgMusic.loop = true;
 bgMusic.volume = 0.4;
 
-const adController = window.Adsgram ? window.Adsgram.init({ blockId: "bot-47604" }) : null;
-
-async function watchAdForReward() {
-    triggerHaptic('light');
-    if (!adController) {
-        showToast("⚠️ Рекламний модуль чекає активізації!");
-        return;
-    }
-
-    try {
-        const result = await adController.show();
-        if (result.done) {
-            gameState.ducats += 5;
-            triggerHaptic('success');
-            saveGame();
-            render();
-            showToast("🎁 Отримано +5 🪙 Дукатів за рекламу!");
-        }
-    } catch (e) {
-        console.error("Помилка показу реклами:", e);
-        showToast("⚠️ Рекламу не було доведено до кінця.");
-    }
-}
-
 function triggerHaptic(style = 'light') {
     if (tg?.HapticFeedback) {
         try {
@@ -77,9 +53,11 @@ const defaultState = {
     ducats: 5,
     clickPower: 1,
     totalClicks: 0,
+    toolDurability: 100, // Знос інструменту (від 0 до 100)
     lastOnline: Date.now(),
     hasAutoCollector: false,
-    activeBoosts: { palynkaTimer: 0, banoshTimer: 0 },
+    activeBoosts: { palynkaTimer: 0, banoshTimer: 0, hangoverTimer: 0 },
+    activeHazard: null, // Погода чи податок війта: { type: 'drought'|'tax', text: '...', time: X }
     settings: { music: true, sfx: true },
     beds: [
         { id: 1, name: '🥔 Крумплі', level: 1, basePrice: 20, baseIncome: 1, unlocked: true, unlockEndTime: 0 },
@@ -97,7 +75,6 @@ const defaultState = {
         { id: 13, name: '🍷 Ґраппа', level: 0, basePrice: 1200000000, baseIncome: 6200000, unlocked: false, unlockEndTime: 0 },
         { id: 14, name: '💧 Поляна Квасова', level: 0, basePrice: 6000000000, baseIncome: 26000000, unlocked: false, unlockEndTime: 0 },
         { id: 15, name: '🌸 Шафран', level: 0, basePrice: 30000000000, baseIncome: 110000000, unlocked: false, unlockEndTime: 0 },
-        // Нові хардкорні рівні (16-25)
         { id: 16, name: '🍯 Карпатський Мед', level: 0, basePrice: 150000000000, baseIncome: 480000000, unlocked: false, unlockEndTime: 0 },
         { id: 17, name: '🫕 Бриндза з полонини', level: 0, basePrice: 800000000000, baseIncome: 2100000000, unlocked: false, unlockEndTime: 0 },
         { id: 18, name: '🦌 Роги оленя', level: 0, basePrice: 4200000000000, baseIncome: 9500000000, unlocked: false, unlockEndTime: 0 },
@@ -122,12 +99,12 @@ let gameState = defaultState;
 function saveGame() {
     try {
         gameState.lastOnline = Date.now();
-        localStorage.setItem('zakarpattia_farm_save_v11', JSON.stringify(gameState));
+        localStorage.setItem('zakarpattia_farm_save_v13', JSON.stringify(gameState));
     } catch(e) {}
 }
 
 try {
-    const loaded = localStorage.getItem('zakarpattia_farm_save_v11');
+    const loaded = localStorage.getItem('zakarpattia_farm_save_v13');
     if (loaded) {
         const parsed = JSON.parse(loaded);
         gameState = { 
@@ -144,6 +121,7 @@ try {
                 return savedQ ? { ...defaultQ, ...savedQ } : defaultQ;
             })
         };
+        if (gameState.toolDurability === undefined) gameState.toolDurability = 100;
     }
 } catch(e) {
     gameState = defaultState;
@@ -241,14 +219,38 @@ function render() {
         }
     });
 
-    const tapMultiplier = (gameState.activeBoosts?.palynkaTimer > 0 ? 5 : 1) * (1 + gameState.ducats * 0.15);
-    const incomeMultiplier = (gameState.activeBoosts?.banoshTimer > 0 ? 3 : 1) * (1 + gameState.ducats * 0.15);
+    // Розрахунок множників з урахуванням похмілля та допінгів
+    let tapMult = (gameState.activeBoosts?.palynkaTimer > 0 ? 5 : 1) * (1 + gameState.ducats * 0.15);
+    if (gameState.activeBoosts?.hangoverTimer > 0) tapMult *= 0.5; // Похмілля ріже силу вдвічі
+    if (gameState.toolDurability <= 0) tapMult = 0; // Зламаний інструмент
+
+    let incomeMult = (gameState.activeBoosts?.banoshTimer > 0 ? 3 : 1) * (1 + gameState.ducats * 0.15);
+    if (gameState.activeHazard && gameState.activeHazard.type === 'drought') {
+        incomeMult = 0; // Засуха блокує пасивний дохід
+    }
 
     document.getElementById('money-display').innerText = formatNum(gameState.money);
     document.getElementById('ducats-display').innerText = gameState.ducats;
-    document.getElementById('click-power-display').innerText = formatNum(gameState.clickPower * tapMultiplier);
+    document.getElementById('click-power-display').innerText = formatNum(gameState.clickPower * tapMult);
     
-    const totalPassive = gameState.beds.reduce((acc, b) => acc + (b.unlocked ? b.level * b.baseIncome : 0), 0) * incomeMultiplier;
+    const durabilityEl = document.getElementById('tool-durability');
+    if (durabilityEl) {
+        durabilityEl.innerText = `Знос інструменту: ${Math.max(0, Math.floor(gameState.toolDurability))}%`;
+        durabilityEl.style.color = gameState.toolDurability < 20 ? '#ff5252' : '#ffeb3b';
+    }
+
+    // Рендер банера погоди / війта
+    const weatherBanner = document.getElementById('weather-banner');
+    if (weatherBanner) {
+        if (gameState.activeHazard) {
+            weatherBanner.classList.remove('hidden');
+            document.getElementById('weather-text').innerText = gameState.activeHazard.text;
+        } else {
+            weatherBanner.classList.add('hidden');
+        }
+    }
+
+    const totalPassive = gameState.beds.reduce((acc, b) => acc + (b.unlocked ? b.level * b.baseIncome : 0), 0) * incomeMult;
     document.getElementById('passive-income').innerText = formatNum(totalPassive);
 
     const bedsContainer = document.getElementById('beds-list');
@@ -263,11 +265,10 @@ function render() {
         const card = document.createElement('div');
         card.className = 'bed-card';
 
-        // Збільшена складність: коефіцієнт ціни апгрейду 1.22 замість 1.17
         if (bed.unlocked) {
             const cost = Math.floor(bed.basePrice * Math.pow(1.22, bed.level));
             const canAfford = gameState.money >= cost;
-            const currentIncome = Math.floor(bed.level * bed.baseIncome * incomeMultiplier);
+            const currentIncome = Math.floor(bed.level * bed.baseIncome * incomeMult);
 
             card.innerHTML = `
                 <div class="bed-info">
@@ -328,7 +329,7 @@ function unlockBed(id) {
         gameState.money -= bed.basePrice;
         
         const bedIndex = gameState.beds.findIndex(b => b.id === id);
-        const minutesToAdd = (bedIndex + 1) * 20; // довше будівництво для хардкору
+        const minutesToAdd = (bedIndex + 1) * 20; 
         
         bed.unlockEndTime = Date.now() + minutesToAdd * 60 * 1000;
         
@@ -355,15 +356,17 @@ function speedUpBed(id) {
         render();
         showToast(`⚡ Грядку зведено миттєво за дукати!`);
     } else {
-        showToast("⚠️ Мало донатних дукатів!");
+        showToast("⚠️ Мало внутрішніх дукатів!");
     }
 }
 
 function buyBoost(type, price) {
     if (gameState.money >= price) {
         gameState.money -= price;
-        if (!gameState.activeBoosts) gameState.activeBoosts = { palynkaTimer: 0, banoshTimer: 0 };
-        if (type === 'palynka') gameState.activeBoosts.palynkaTimer = 30;
+        if (!gameState.activeBoosts) gameState.activeBoosts = { palynkaTimer: 0, banoshTimer: 0, hangoverTimer: 0 };
+        if (type === 'palynka') {
+            gameState.activeBoosts.palynkaTimer = 30;
+        }
         if (type === 'banosh') gameState.activeBoosts.banoshTimer = 60;
         triggerHaptic('success');
         saveGame();
@@ -375,49 +378,40 @@ function buyBoost(type, price) {
     }
 }
 
-function buyWithStars(itemType, starsPrice) {
-    triggerHaptic('medium');
-    if (!tg || !tg.openInvoice) {
-        if (confirm(`Симуляція покупка за ⭐ ${starsPrice} Зірок?`)) {
-            processSuccessfulPurchase(itemType);
-        }
-        return;
+function repairTool() {
+    const repairCost = 50;
+    if (gameState.money >= repairCost) {
+        gameState.money -= repairCost;
+        gameState.toolDurability = 100;
+        triggerHaptic('success');
+        saveGame();
+        render();
+        showToast("🛠️ Мотику успішно відковано!");
+        playSound(700, 'triangle');
+    } else {
+        showToast("⚠️ Не вистачає грошей на коваля (50 грн)!");
     }
-    try {
-        if (confirm(`Підтвердити покупку за ⭐ ${starsPrice} Зірок?`)) {
-            processSuccessfulPurchase(itemType);
-        }
-    } catch (e) {
-        showToast("⚠️ Помилка створення платежу.");
-    }
-}
-
-function processSuccessfulPurchase(itemType) {
-    if (itemType === 'auto_collector') {
-        gameState.hasAutoCollector = true;
-        showToast("🎉 Кіт-Копач тепер працює на вас вічно!");
-    } else if (itemType === 'ducats_pack') {
-        gameState.ducats += 50;
-        showToast("🎉 Отримано +50 Дукатів!");
-    } else if (itemType === 'super_chest') {
-        gameState.ducats += 250;
-        gameState.activeBoosts.banoshTimer += 3600;
-        showToast("🎉 Скриня успішно відкрита!");
-    }
-    triggerHaptic('success');
-    saveGame();
-    render();
-    closeModal('stars-modal');
 }
 
 document.getElementById('tap-btn').addEventListener('click', (e) => {
+    if (gameState.toolDurability <= 0) {
+        showToast("⚠️ Мотика зламана! Час її відкувати.");
+        triggerHaptic('heavy');
+        return;
+    }
+
     if (gameState.settings.music && bgMusic.paused) {
         bgMusic.play().catch(() => {});
     }
 
-    const tapMultiplier = (gameState.activeBoosts?.palynkaTimer > 0 ? 5 : 1) * (1 + gameState.ducats * 0.15);
-    const isCrit = Math.random() < 0.12; // Зменшений шанс криту для ускладнення
-    const earned = Math.floor(gameState.clickPower * tapMultiplier * (isCrit ? 4 : 1));
+    // Знос інструменту при кожному тапі
+    gameState.toolDurability = Math.max(0, gameState.toolDurability - 0.8);
+
+    let tapMult = (gameState.activeBoosts?.palynkaTimer > 0 ? 5 : 1) * (1 + gameState.ducats * 0.15);
+    if (gameState.activeBoosts?.hangoverTimer > 0) tapMult *= 0.5;
+
+    const isCrit = Math.random() < 0.12;
+    const earned = Math.floor(gameState.clickPower * tapMult * (isCrit ? 4 : 1));
 
     gameState.money += earned;
     gameState.totalClicks++;
@@ -519,8 +513,9 @@ function openLeaderboard() {
     });
 }
 
+// Рандомні події (жук) та поява негоди/податків війта
 setInterval(() => {
-    if (!activeEvent && Math.random() < 0.25) {
+    if (!activeEvent && Math.random() < 0.20) {
         activeEvent = { type: 'bug', reward: Math.floor(gameState.money * 0.15) + 50 };
         document.getElementById('random-event').classList.remove('hidden');
         triggerHaptic('medium');
@@ -532,13 +527,39 @@ setInterval(() => {
             }
         }, 5000);
     }
-}, 12000);
+
+    // Рандомні суворі умови (Засуха або Війт)
+    if (!gameState.activeHazard && Math.random() < 0.08) {
+        const hazardType = Math.random() < 0.5 ? 'drought' : 'tax';
+        if (hazardType === 'drought') {
+            gameState.activeHazard = { type: 'drought', text: '☀️ Сильна засуха! Пасивний дохід зупинено на 30 сек.', time: 30 };
+        } else {
+            const taxAmount = Math.max(200, Math.floor(gameState.money * 0.1));
+            gameState.activeHazard = { type: 'tax', text: `📜 Завітав сільський війт! Потрібно сплатити данину: ${formatNum(taxAmount)} грн (кликай сюди, щоб оплатити)`, amount: taxAmount, time: 45 };
+            
+            // Робимо клікабельним баннер для сплати податку
+            document.getElementById('weather-banner').onclick = () => {
+                if (gameState.money >= gameState.activeHazard.amount) {
+                    gameState.money -= gameState.activeHazard.amount;
+                    gameState.activeHazard = null;
+                    triggerHaptic('success');
+                    showToast("✅ Війт задоволений, податок сплачено!");
+                    saveGame();
+                    render();
+                } else {
+                    showToast("⚠️ У касі немає таких грошей для війта!");
+                }
+            };
+        }
+        triggerHaptic('heavy');
+    }
+}, 15000);
 
 function handleEventClick() {
     if (activeEvent) {
         gameState.money += activeEvent.reward;
         triggerHaptic('heavy');
-        showToast(`💥 Жука збито! +${formatNum(activeEvent.reward)} грн`);
+        showToast(`💥 Когута збито! +${formatNum(activeEvent.reward)} грн`);
         activeEvent = null;
         document.getElementById('random-event').classList.add('hidden');
         saveGame();
@@ -574,6 +595,7 @@ function doPrestige() {
     const earned = Math.floor(gameState.money / 200000);
     gameState.ducats += earned;
     gameState.money = 15;
+    gameState.toolDurability = 100;
     gameState.beds.forEach((b, idx) => { b.level = idx === 0 ? 1 : 0; b.unlocked = idx === 0; b.unlockEndTime = 0; });
     triggerHaptic('heavy');
     saveGame(); 
@@ -581,15 +603,43 @@ function doPrestige() {
     showToast(`⛵ Сплав успішний! +${earned} 🪙 Дукатів`);
 }
 
+// Щосекундний тік грального процесу
 setInterval(() => {
     if (gameState.activeBoosts) {
-        if (gameState.activeBoosts.palynkaTimer > 0) gameState.activeBoosts.palynkaTimer--;
+        if (gameState.activeBoosts.palynkaTimer > 0) {
+            gameState.activeBoosts.palynkaTimer--;
+            // Якщо палинка закінчилася, увімкнути похмілля на 15 сек
+            if (gameState.activeBoosts.palynkaTimer === 0) {
+                gameState.activeBoosts.hangoverTimer = 15;
+                showToast("🥴 Похмілля! Сила тапу впала на 15 секунд.");
+            }
+        }
         if (gameState.activeBoosts.banoshTimer > 0) gameState.activeBoosts.banoshTimer--;
+        if (gameState.activeBoosts.hangoverTimer > 0) gameState.activeBoosts.hangoverTimer--;
+    }
+
+    if (gameState.activeHazard) {
+        gameState.activeHazard.time--;
+        if (gameState.activeHazard.time <= 0) {
+            if (gameState.activeHazard.type === 'tax') {
+                // Якщо не сплатив податок вовремя — штраф з каси
+                gameState.money = Math.max(0, gameState.money - gameState.activeHazard.amount);
+                showToast("⚠️ Війт сам забрав штраф з комори!");
+            }
+            gameState.activeHazard = null;
+            document.getElementById('weather-banner').onclick = null;
+        }
     }
 
     const incomeMult = (gameState.activeBoosts?.banoshTimer > 0 ? 3 : 1) * (1 + gameState.ducats * 0.15);
     let inc = 0;
-    gameState.beds.forEach(b => { if (b.unlocked) inc += b.level * b.baseIncome; });
+    
+    // Якщо засуха — пасивний дохід 0
+    const isDrought = gameState.activeHazard && gameState.activeHazard.type === 'drought';
+    if (!isDrought) {
+        gameState.beds.forEach(b => { if (b.unlocked) inc += b.level * b.baseIncome; });
+    }
+
     if (inc > 0) {
         gameState.money += inc * incomeMult;
     }
